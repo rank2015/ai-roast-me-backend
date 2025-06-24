@@ -1,12 +1,17 @@
-import openai
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+import os
+import openai
+from openai import OpenAI
+
+# Create OpenAI client using the new SDK
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace * with your frontend domain
+    allow_origins=["*"],  # You can restrict this in production
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -25,10 +30,11 @@ async def roast(request: Request):
 
     prompt = prompts.get(style, prompts["Brutally Honest"])
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.9
     )
 
-    return {"roast": response["choices"][0]["message"]["content"]}
+    return {"roast": response.choices[0].message.content}
+
