@@ -49,11 +49,14 @@ async def roast(payload: dict):
     prompt = generate_prompt(facts, style)
 
     # Step 3: Get roast from OpenAI Chat API
+try:
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.9,
     )
+except Exception as e:
+    return {"roast": f"❌ OpenAI error: {str(e)}"}
 
     roast_text = response["choices"][0]["message"]["content"]
 
