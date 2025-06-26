@@ -41,12 +41,16 @@ async def roast(request: RoastRequest):
 
     prompt = f"Roast this person in the style of {request.style}: {request.facts}"
 
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.9
-        )
+    # Only runs if no banned words are found
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.9
+    )
+    
+    roast_text = response["choices"][0]["message"]["content"]
+    return {"roast": roast_text}
+
         roast_text = response["choices"][0]["message"]["content"]
         return {"roast": roast_text}
 
