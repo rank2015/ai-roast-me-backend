@@ -30,7 +30,7 @@ BANNED_WORDS = {
 }
 
 def contains_banned_words(text: str) -> bool:
-    words = text.lower().split()
+    words = re.findall(r"\b\w+\b", text.lower())
     return any(word in BANNED_WORDS for word in words)
 
 # 🔥 Roast Endpoint
