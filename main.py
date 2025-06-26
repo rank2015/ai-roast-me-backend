@@ -14,7 +14,7 @@ app = FastAPI()
 # 🌐 Allow frontend to talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all for now; you can lock this down later
+    allow_origins=["*"],  # Allow all for now; tighten later if needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,6 +24,7 @@ app.add_middleware(
 class RoastRequest(BaseModel):
     facts: str
     style: str = "Drag Queen Sass"
+    intensity: str = "medium"  # New: light / medium / savage
 
 # 🚫 Banned words list
 BANNED_WORDS = {
@@ -31,12 +32,12 @@ BANNED_WORDS = {
     "slut", "whore", "rape", "kill", "terrorist", "suicide", "nazi", "hitler"
 }
 
-# 🧠 Check if user input contains any banned words
+# 🧠 Banned word checker
 def contains_banned_words(text: str) -> bool:
     words = re.findall(r"\b\w+\b", text.lower())
     for word in words:
         if word in BANNED_WORDS:
-            print(f"🚫 Banned word detected: {word}")  # Debug logging
+            print(f"🚫 Banned word detected: {word}")  # Debug
             return True
     return False
 
@@ -46,7 +47,20 @@ async def roast(request: RoastRequest):
     if contains_banned_words(request.facts):
         return {"roast": "❌ Sorry, keep it clean! No inappropriate words allowed."}
 
-    prompt = f"Roast this person in the style of {request.style}: {request.facts}"
+    # 🧂 Intensity tone mapping
+    if request.intensity == "light":
+        tone = "light and playful, like a soft tease"
+    elif request.intensity == "savage":
+        tone = "savage, witty, and brutally hilarious — but still clean"
+    else:
+        tone = "funny and edgy, but not mean"
+
+    # 🧠 AI prompt
+    prompt = (
+        f"You are an AI roasting comedian. The user's facts are: \"{request.facts}\".\n"
+        f"Roast them in the style of {request.style} with a tone that is {tone}. "
+        f"Keep it under 50 words. Make it clever, clean, and original."
+    )
 
     try:
         response = openai.ChatCompletion.create(
@@ -56,6 +70,11 @@ async def roast(request: RoastRequest):
         )
         roast_text = response["choices"][0]["message"]["content"]
         return {"roast": roast_text}
+
+    except Exception as e:
+        print(f"❌ OpenAI error: {e}")
+        return {"roast": "🚨 Error generating roast. Please try again later."}
+
 
     except Exception as e:
         print(f"❌ OpenAI error: {e}")
